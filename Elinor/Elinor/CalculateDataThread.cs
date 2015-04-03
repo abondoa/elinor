@@ -65,6 +65,9 @@ namespace Elinor
                 samplesF.Columns.Add("Size", typeof (string));
                 samplesF.Columns.Add("CoS", typeof (string));
                 samplesF.Columns.Add("Profit", typeof (string));
+                var movement = _main.BuyMovement < _main.SalesMovement ? _main.BuyMovement : _main.SalesMovement;
+                samples.Rows.Add(String.Format("{0:n0}", movement), String.Format("{0:n}m", movement * cos / 1000000),
+                                     String.Format("{0:n}m", movement * (revenue - cos) / 1000000));
 
                 for (int i = 1; i < 100000000; i *= 10)
                 {

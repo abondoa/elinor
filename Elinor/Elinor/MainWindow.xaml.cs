@@ -34,6 +34,10 @@ namespace Elinor
 
         private double _sell;
         private int _typeId;
+        private long _salesVolume;
+        private long _salesMovement;
+        private long _buyMovement;
+        private long _buyVolume;
 
         public MainWindow()
         {
@@ -155,40 +159,35 @@ namespace Elinor
                                       };
             setItemName.RunWorkerAsync();
 
+            var volumes = new Dictionary<string, long>();
+            if (_typeId > 0)
+            {
+                volumes = VolumeFetcher.GetVolumes(table);
+            }
+            volumes.TryGetValue("sellvol", out _salesVolume);
+            volumes.TryGetValue("sellmov", out _salesMovement);
+            volumes.TryGetValue("buyvol", out _buyVolume);
+            volumes.TryGetValue("buymov", out _buyMovement);
             var getVolumes = new BackgroundWorker();
             getVolumes.DoWork += (sender, args) =>
                                      {
-                                         var volumes = new Dictionary<string, long>();
-                                         if (_typeId > 0)
-                                         {
-                                             volumes = VolumeFetcher.GetVolumes(table);
-                                         }
-
-
                                          Dispatcher.Invoke(new Action(delegate
-                                                                          {
-                                                                              if (volumes.Count > 0)
-                                                                              {
-                                                                                  long i, j;
-                                                                                  if (
-                                                                                      volumes.TryGetValue("sellvol",
-                                                                                                          out i) &&
-                                                                                      volumes.TryGetValue("sellmov",
-                                                                                                          out j))
-                                                                                      lblSellvols.Content =
-                                                                                          string.Format(
-                                                                                              "{0:n0}/{1:n0}", i, j);
-
-                                                                                  if (
-                                                                                      volumes.TryGetValue("buyvol",
-                                                                                                          out i) &&
-                                                                                      volumes.TryGetValue("buymov",
-                                                                                                          out j))
-                                                                                      lblBuyvols.Content =
-                                                                                          string.Format(
-                                                                                              "{0:n0}/{1:n0}", i, j);
-                                                                              }
-                                                                          }));
+                                            {
+                                                if (volumes.Count > 0)
+                                                {
+                                                    long i, j;
+                                                    if (volumes.TryGetValue("sellvol", out i) &&
+                                                        volumes.TryGetValue("sellmov", out j))
+                                                    {
+                                                        lblSellvols.Content = string.Format( "{0:n0}/{1:n0}", i, j);
+                                                    }
+                                                    if (volumes.TryGetValue("buyvol", out i) &&
+                                                        volumes.TryGetValue("buymov", out j))
+                                                    {
+                                                        lblBuyvols.Content = string.Format("{0:n0}/{1:n0}", i, j);
+                                                    }
+                                                }
+                                            }));
                                      };
             getVolumes.RunWorkerAsync();
 
@@ -201,7 +200,6 @@ namespace Elinor
                                                                       ? String.Format("{0:n} ISK", _buy)
                                                                       : "No orders in range";
                                              }));
-
             var cdt = new CalculateDataThread(_sell, _buy, this);
             var calc = new Thread(cdt.Run);
             calc.Start();
@@ -788,5 +786,13 @@ namespace Elinor
             Properties.Settings.Default.Save();
             if(Properties.Settings.Default.checkforupdates) Updates.CheckForUpdates();
         }
+
+        public long SalesVolume { get { return _salesVolume; } set { _salesVolume = value; } }
+
+        public long SalesMovement { get { return _salesMovement; } set { _salesMovement = value; } }
+
+        public long BuyVolume { get { return _buyVolume; } set { _buyVolume = value; } }
+
+        public long BuyMovement { get { return _buyMovement; } set { _buyMovement = value; } }
     }
 }
